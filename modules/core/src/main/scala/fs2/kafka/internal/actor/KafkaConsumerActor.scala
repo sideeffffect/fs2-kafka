@@ -389,16 +389,6 @@ final private[kafka] class KafkaConsumerActor[F[_], K, V](
       .update(_.withRequestedCommitOffsets(request.offsets))
       .whenA(settings.commitOnRevoke) >> commitAsync(request.offsets, request.callback)
 
-  /**
-    * Commits the last requested offsets for the partitions being revoked, synchronously, from
-    * `onPartitionsRevoked` while we still own them.
-    *
-    * The listener runs on the polling thread, so the commit goes through
-    * [[WithConsumer.synchronouslyDuringRebalance]] (a direct call on that thread) rather than
-    * `withConsumer.blocking`, which would deadlock against the ongoing `poll`. Reading the state
-    * goes through the dispatcher, which is safe to do. Errors are logged and ignored: this only
-    * reduces duplicates and does not change the at-least-once guarantee.
-    */
   private[this] def commitOnRevokeSync(revoked: Set[TopicPartition]): Unit = {
     val offsets = dispatcher.unsafeRunSync(state.modify(_.removeRequestedCommitOffsets(revoked)))
     if (offsets.nonEmpty) {

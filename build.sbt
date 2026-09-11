@@ -270,7 +270,6 @@ ThisBuild / mimaBinaryIssueFilters ++= {
     ProblemFilters.exclude[ReversedMissingMethodProblem]("fs2.kafka.KafkaConsumer.settings"),
     ProblemFilters.exclude[ReversedMissingMethodProblem]("fs2.kafka.ConsumerSettings.withMaxParallelism"),
     ProblemFilters.exclude[ReversedMissingMethodProblem]("fs2.kafka.ConsumerSettings.maxParallelism"),
-    // New commitOnRevoke settings; safe to add because ConsumerSettings is sealed.
     ProblemFilters.exclude[ReversedMissingMethodProblem]("fs2.kafka.ConsumerSettings.commitOnRevoke"),
     ProblemFilters.exclude[ReversedMissingMethodProblem]("fs2.kafka.ConsumerSettings.withCommitOnRevoke"),
     ProblemFilters.exclude[DirectMissingMethodProblem]("fs2.kafka.ConsumerSettings#ConsumerSettingsImpl.copy"),

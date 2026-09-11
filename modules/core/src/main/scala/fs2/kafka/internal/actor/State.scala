@@ -67,10 +67,6 @@ final private[kafka] case class State[F[_], K, V](
 
   def withNotStreaming(): State[F, K, V] = copy(streaming = false)
 
-  /**
-    * Records the latest requested offset per partition, so it can be committed on revoke if the
-    * asynchronous commit has not landed yet. Keeps the highest offset per partition.
-    */
   def withRequestedCommitOffsets(
     offsets: Map[TopicPartition, OffsetAndMetadata]
   ): State[F, K, V] =
@@ -80,9 +76,6 @@ final private[kafka] case class State[F[_], K, V](
         if (isNewer) acc.updated(partition, offsetAndMetadata) else acc
     })
 
-  /**
-    * Drops and returns the tracked offsets for the revoked partitions.
-    */
   def removeRequestedCommitOffsets(
     revoked: Set[TopicPartition]
   ): (State[F, K, V], Map[TopicPartition, OffsetAndMetadata]) = {

@@ -414,21 +414,8 @@ sealed abstract class ConsumerSettings[F[_], K, V] {
     */
   def maxParallelism: Int
 
-  /**
-    * When `true`, offsets already passed to `commit` for the revoked partitions are committed
-    * synchronously from the rebalance listener, before we lose those partitions. This reduces
-    * duplicate deliveries around a rebalance or shutdown, where an asynchronous commit that has not
-    * been acknowledged yet would otherwise be lost.
-    *
-    * It does not remove duplicates completely: records that were consumed but not yet committed are
-    * still redelivered. Combine it with [[RebalanceRevokeMode.Graceful]] or idempotent processing
-    * for stronger guarantees. Defaults to `false`.
-    */
   def commitOnRevoke: Boolean
 
-  /**
-    * Creates a new [[ConsumerSettings]] with the specified [[commitOnRevoke]] flag.
-    */
   def withCommitOnRevoke(commitOnRevoke: Boolean): ConsumerSettings[F, K, V]
 
 }
