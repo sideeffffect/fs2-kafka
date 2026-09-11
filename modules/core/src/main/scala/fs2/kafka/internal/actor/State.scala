@@ -68,9 +68,8 @@ final private[kafka] case class State[F[_], K, V](
   def withNotStreaming(): State[F, K, V] = copy(streaming = false)
 
   /**
-    * Remembers the latest requested commit offset per partition, so that — if those partitions are
-    * revoked before the asynchronous commit is acknowledged — they can be committed synchronously
-    * from within the rebalance listener. Keeps the highest offset seen per partition.
+    * Records the latest requested offset per partition, so it can be committed on revoke if the
+    * asynchronous commit has not landed yet. Keeps the highest offset per partition.
     */
   def withRequestedCommitOffsets(
     offsets: Map[TopicPartition, OffsetAndMetadata]
@@ -82,7 +81,7 @@ final private[kafka] case class State[F[_], K, V](
     })
 
   /**
-    * Removes and returns the tracked commit offsets for the given (revoked) partitions.
+    * Drops and returns the tracked offsets for the revoked partitions.
     */
   def removeRequestedCommitOffsets(
     revoked: Set[TopicPartition]

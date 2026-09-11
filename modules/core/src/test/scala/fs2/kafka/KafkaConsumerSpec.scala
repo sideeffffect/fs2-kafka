@@ -86,9 +86,8 @@ final class KafkaConsumerSpec extends BaseKafkaSpec {
             .withGroupId(s"commit-on-revoke-${UUID.randomUUID()}")
             .withCommitOnRevoke(true)
 
-        // The first consumer processes and commits every record, then shuts down. Closing it
-        // triggers `onPartitionsRevoked`, where the tracked offsets are committed synchronously
-        // (directly on the Java consumer, while the partition is still owned).
+        // First consumer commits every record and then shuts down. On close, onPartitionsRevoked
+        // commits the tracked offsets synchronously while it still owns the partition.
         val consumedFirst =
           KafkaConsumer
             .stream(settings)
@@ -99,7 +98,7 @@ final class KafkaConsumerSpec extends BaseKafkaSpec {
             .compile
             .toVector
 
-        // A second consumer in the same group must then find nothing left to consume.
+        // Second consumer in the same group should then have nothing left to read.
         val consumedSecond =
           KafkaConsumer
             .stream(settings)

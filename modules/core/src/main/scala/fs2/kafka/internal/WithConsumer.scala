@@ -19,13 +19,12 @@ sealed abstract private[kafka] class WithConsumer[F[_]] {
   def blocking[A](f: KafkaByteConsumer => A): F[A]
 
   /**
-    * Runs `f` on the current thread, directly on the underlying consumer, bypassing the
-    * single-threaded blocking context used by [[blocking]].
+    * Runs `f` on the underlying consumer directly, on the calling thread, without going through the
+    * single-threaded blocking context that [[blocking]] uses.
     *
-    * This is ONLY safe to call from within a `ConsumerRebalanceListener` callback. Those callbacks
-    * are invoked by Kafka on the consumer's polling thread (inside `poll`), so the consumer may be
-    * accessed reentrantly from there, and routing through [[blocking]] would instead deadlock by
-    * submitting to the single-threaded context that is already occupied by the in-progress `poll`.
+    * Only call this from a `ConsumerRebalanceListener` callback. Kafka runs those callbacks on the
+    * polling thread while `poll` is in progress, so the consumer can be used from there directly.
+    * Using [[blocking]] instead would deadlock, since it submits to the context `poll` is holding.
     */
   def synchronouslyDuringRebalance[A](f: KafkaByteConsumer => A): A
 

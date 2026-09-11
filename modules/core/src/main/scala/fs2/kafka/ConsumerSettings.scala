@@ -415,18 +415,14 @@ sealed abstract class ConsumerSettings[F[_], K, V] {
   def maxParallelism: Int
 
   /**
-    * Whether, when partitions are revoked, the offsets of already-requested commits for those
-    * partitions should be committed synchronously (via `commitSync`) from within the rebalance
-    * listener, while the consumer still owns them.
+    * When `true`, offsets already passed to `commit` for the revoked partitions are committed
+    * synchronously from the rebalance listener, before we lose those partitions. This reduces
+    * duplicate deliveries around a rebalance or shutdown, where an asynchronous commit that has not
+    * been acknowledged yet would otherwise be lost.
     *
-    * The default is `false`. When `false`, the behaviour is unchanged: commits are issued
-    * asynchronously and an in-flight commit may be lost if a rebalance or shutdown happens before
-    * it is acknowledged, leading to records being re-delivered (at-least-once).
-    *
-    * When `true`, the latest requested offset per partition is remembered and re-committed
-    * synchronously on revoke, which narrows that duplicate-delivery window. It does not eliminate
-    * duplicates entirely (records consumed but not yet committed are still re-delivered), and is
-    * best combined with [[RebalanceRevokeMode.Graceful]] and/or idempotent processing.
+    * It does not remove duplicates completely: records that were consumed but not yet committed are
+    * still redelivered. Combine it with [[RebalanceRevokeMode.Graceful]] or idempotent processing
+    * for stronger guarantees. Defaults to `false`.
     */
   def commitOnRevoke: Boolean
 

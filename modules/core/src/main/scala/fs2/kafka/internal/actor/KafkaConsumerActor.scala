@@ -390,18 +390,14 @@ final private[kafka] class KafkaConsumerActor[F[_], K, V](
       .whenA(settings.commitOnRevoke) >> commitAsync(request.offsets, request.callback)
 
   /**
-    * Best-effort, synchronous commit of the most recently requested offsets for the partitions
-    * being revoked, performed from within `onPartitionsRevoked` while we still own them.
+    * Commits the last requested offsets for the partitions being revoked, synchronously, from
+    * `onPartitionsRevoked` while we still own them.
     *
-    * Kafka invokes the rebalance listener on the consumer's polling thread, from inside `poll`. The
-    * `commitSync` therefore goes through [[WithConsumer.synchronouslyDuringRebalance]] — a direct,
-    * reentrant call on the Java consumer on that same thread — rather than `withConsumer.blocking`,
-    * which would submit to the single-threaded blocking context already occupied by `poll` and
-    * deadlock. State access is bounced onto the effect runtime (it is thread-safe), but the
-    * consumer call itself must stay on the polling thread.
-    *
-    * Failures are logged and swallowed: this only narrows the duplicate-delivery window, and the
-    * consumer remains at-least-once.
+    * The listener runs on the polling thread, so the commit goes through
+    * [[WithConsumer.synchronouslyDuringRebalance]] (a direct call on that thread) rather than
+    * `withConsumer.blocking`, which would deadlock against the ongoing `poll`. Reading the state
+    * goes through the dispatcher, which is safe to do. Errors are logged and ignored: this only
+    * reduces duplicates and does not change the at-least-once guarantee.
     */
   private[this] def commitOnRevokeSync(revoked: Set[TopicPartition]): Unit = {
     val offsets = dispatcher.unsafeRunSync(state.modify(_.removeRequestedCommitOffsets(revoked)))
